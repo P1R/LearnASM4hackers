@@ -1,0 +1,140 @@
+CURSO ASM FOR PRIMER HACKERS
+
+video2
+gcc -ggdb file.c -o file.bin
+identificar el PID (ps -aux | grep file.bin)
+encontrar el proceso en memoria en /proc/PID/maps
+---------------------------------------------------
+video3
+
+gdb ./file.bin
+dentro de GDB
+    help comando --- ayuda del comando
+    list 1  --- muestra el codigo fuente
+    run parametros - corre el programa con parametros
+    disassemble main - desensambla el main
+    break 10 - pone breakpoint en la linea 10
+    print x - imprime lo asignado en variable x
+    info registers - muestra los registros en el breakpoint
+    x - comando para examinar
+    x/10xb direccion - muestra 10 unidades hexadecimales en bytes 
+                        desde direccion
+    s - da un paso despues edel breakpoint
+    continue - continua hasta el final el programa despues de bp
+------------------------------------------------------------------
+video 4
+
+.data  - todos los datos de inicializacion
+.bss   - datos sin inicializar
+.text  - donde se escriben los programas a ejecutar (instrucciones)
+    .globl _start --- llamadas de rutinas externas (funciones externas)
+    _start:     --- comparado como una rutina main
+
+Argumentos de Syscalls
+    EAX - numero de llamada al sistema
+    EBX - primer argumento
+    ECX - segundo argumento
+    EDX - tercer argumento 
+    ESI - cuarto arg
+    EDI - quinto arg
+
+los system call se encuentran en /usr/include/asm/unistd_32.h
+Para compilar el codigo asm con extencion .s
+primero se crea el objeto:
+
+    as -o helloworld.o helloworld.s
+
+Luego se crea en enlace con:
+
+    ld -o helloworld helloworld.o
+---------------------------------------------------------------------
+Video 5
+
+    para VariableDemo.s
+
+Data Types in .DATA 
+    .byte = 1 byte
+    .ascii = string
+    .asciz = Null terminated string
+    .int = 32 bit integer
+    .short = 16 bit integer
+    .float = single precision flotating point number
+    .double = Double precision flotating point number
+Data Types in .BSS
+    .comm = declares common memory area
+    .lcomm = declares local common memory area
+
+ensamblando:
+    as -gstabs -o VariableDemo.o VariableDemo.s : para activar gdb
+    ld -o VariableDemo VariableDemo.o
+En gdb:
+    break *_start+1 : pone break donde inicia en la segunda instruccion
+    info variables : nos muestras las direcciones en mem de cada variable creada
+Desplegar datos en forma legible:
+    x/12cb direccion de HelloWorld
+    x/1db  dir de byte
+    x/1dw  dir de int
+    x/1dh  dir de short
+    x/1fw  dir de float
+    x/5dw  dir de integerArray
+    x/10db dir de LargeBuffer (muestra primeros 10 bytes)
+----------------------------------------------------------------------
+Video 6 : Moving Data
+
+Instrucciones basicas - MOVx
+    movl = mueve un valor de 32 bits
+        movl %eax, %ebx
+    movw = mueve un valor de 16 bits
+        movw %ax, %bx
+    movb = mueve un valor de 8 bits
+        movb %ah, %bh
+
+Moviendo Datos
+    <<Entre Registros>>
+        movl %eax,%ebx
+    <<Entre Registros y Memoria>>
+        location:
+            .int 10
+
+        movl %eax,location
+        movl %location,%ebx
+    <<Valores Inmediatos a Registros>>
+        movl $10,%ebx
+    <<Valores Inmediatos en Memoria>>
+        location:
+            .byte 0
+
+        movb $10,location
+    <<Moviendo Datos en un Lugar de Memoria Indexado>>
+        IntegerArray:
+            .int 10,20,30,40,50
+
+        Para seleccionar el tercer entero dentro del arreglo:
+        BaseAddress(Offset,Indice,Tamaño):
+            IntegerArray(0,2,4)
+
+            movl %eax,IntegerArray(0,2,4)
+
+Direccionamiento Indirecto Usando Registros
+
+    Colocando "$" antes del nombre de la etiqueta ==> se toma 
+    la direccion de memoria de la variable, no el valor.
+        
+        movl $location,%edi
+
+    movl $9,(%edi) ==> coloca el valor "9" en la locacion
+    memoria a la que apunta edi
+
+    movl $9,4(%edi) ==> coloca el valor "9" en la locacion
+    de memoria a la que apunta (edi+4)
+
+    movl $9,-2($edi) ==> coloca el valor "9" en la locacion
+    de memoria a la que apunta (edi-2) 
+
+info registers ==> muestra el estado de los registros al 
+                   momento del breakpoint. 
+print &Int32 : imprime la direccion de Int32
+x/1dw &Int32 : imprime el valor de Int32 por medio de Direccion
+                asi no tienes que ver info variables
+                
+                 
